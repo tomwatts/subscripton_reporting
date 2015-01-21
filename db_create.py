@@ -12,7 +12,8 @@ def create_db(connection):
 	cursor.execute('CREATE TABLE daily_domain_counts ( '
 		' domain VARCHAR(255) NOT NULL, '
 		' day UNSIGNED INT NOT NULL, '
-		' count UNSIGNED BIG INT NOT NULL DEFAULT 0 )')
+		' count UNSIGNED BIG INT NOT NULL DEFAULT 0, '
+		' CONSTRAINT daily_domain_counts PRIMARY KEY ( domain, day ))')
 	connection.commit()
 	print ('Done!')
 	
