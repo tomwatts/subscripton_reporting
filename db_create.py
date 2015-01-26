@@ -41,7 +41,7 @@ def populate_db(connection):
 
 connection = sqlite3.connect('code_test.db')
 
-create_db(connection)
+#create_db(connection)
 populate_db(connection)
 
 connection.close()
