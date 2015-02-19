@@ -2,23 +2,23 @@
 
 import sqlite3
 import random
+import sys
 
 def create_db(connection):
-	print('Creating database...')
+	#print('Creating database...')
 	cursor = connection.cursor()
-	cursor.execute('DROP TABLE IF EXISTS mailing')
-	cursor.execute('CREATE TABLE mailing ( addr VARCHAR(255) NOT NULL )')
-	cursor.execute('DROP TABLE IF EXISTS daily_domain_counts')
-	cursor.execute('CREATE TABLE daily_domain_counts ( '
-		' domain VARCHAR(255) NOT NULL, '
-		' day UNSIGNED INT NOT NULL, '
-		' count UNSIGNED BIG INT NOT NULL DEFAULT 0, '
-		' CONSTRAINT daily_domain_counts PRIMARY KEY ( domain, day ))')
+	cursor.execute('''CREATE TABLE IF NOT EXISTS mailing ( addr VARCHAR(255)
+		NOT NULL )''')
+	cursor.execute('''CREATE TABLE IF NOT EXISTS daily_domain_counts (
+		domain VARCHAR(255) NOT NULL,
+		day UNSIGNED INT NOT NULL,
+		count UNSIGNED BIG INT NOT NULL DEFAULT 0,
+		CONSTRAINT daily_domain_counts PRIMARY KEY ( domain, day ))''')
 	connection.commit()
-	print ('Done!')
+	#print ('done!')
 	
 def populate_db(connection):
-	print('Populating database...')
+	#print('Populating database...')
 	cursor = connection.cursor()
 	domains = []
 
@@ -33,15 +33,15 @@ def populate_db(connection):
 			#print address
 		
 		# Insert into DB
-		cursor.execute('INSERT INTO mailing VALUES (?)', (address,))
+		cursor.execute('INSERT INTO mailing (addr) VALUES (?)',\
+			(address,))
 	
 	connection.commit()
-	print ('Done!')
-
+	#print ('done!')
 
 connection = sqlite3.connect('code_test.db')
 
-#create_db(connection)
+create_db(connection)
 populate_db(connection)
 
 connection.close()
