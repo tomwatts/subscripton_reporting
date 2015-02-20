@@ -4,11 +4,19 @@ import math
 import sqlite3
 import time
 import sys
+import getopt
 
 # Day of run + domain makes a unique entry
-day = 16486 #math.floor(time.time() / 60 / 60 / 24)
+day = math.floor(time.time() / 60 / 60 / 24)
 
-connection = sqlite3.connect('code_test.db')
+# Command line option to override the default day of today
+opts, args = getopt.getopt(sys.argv[1:], ":d:", ["day="])
+
+for opt, arg in opts:
+	if (opt in ['-d', '--day']):
+		day = int(arg)
+
+connection = sqlite3.connect('subscriptions.db')
 
 sorted_top_fifty = list()
 
@@ -17,7 +25,7 @@ with connection:
 
 	domain_counts = dict()
 
-	sys.stdout.write("Getting subscriptions...")
+	print("Getting subscriptions...")
 	
 	for address in cursor.execute('SELECT addr FROM mailing'):
 
@@ -61,6 +69,7 @@ with connection:
 		count = domain_count[1]
 		thirty_days_ago = day - 30
 
+		# Get the count from 30 days ago
 		cursor.execute('''
 			SELECT count FROM daily_domain_counts
 			WHERE day=:thirty_days_ago AND domain = :domain LIMIT 1''', \
@@ -70,17 +79,16 @@ with connection:
 		sorted_top_fifty_len = len(sorted_top_fifty)
 
 		if (count_thirty_days_ago is None):
-			count_thirty_days_ago = 0
 			percent_increase = float("inf")
 		else:
 			count_thirty_days_ago = count_thirty_days_ago[0]
 			percent_increase = 100 * \
 				(count - count_thirty_days_ago) / count_thirty_days_ago
-			
+		
 		domain_dict = dict(domain=domain, count=count,\
-			count_thirty_days_ago=count_thirty_days_ago, \
 			percent_increase=percent_increase)
 
+		# Put this domain before the first count smaller than the current
 		if (sorted_top_fifty_len <= 0):
 			sorted_top_fifty.append(domain_dict)
 		else:
@@ -90,12 +98,11 @@ with connection:
 				i += 1
 			sorted_top_fifty.insert(i, domain_dict)
 
-print "Domain\t\t| Count 30 days ago\t| Count\t| % Increase"
+print "Domain\t\t| Count\t| % Increase"
 
 i = 0
 for domain in sorted_top_fifty:
 	i += 1
-	print str(i) + ". " + domain["domain"] + "\t| " + \
-		str(domain["count_thirty_days_ago"]) + "\t\t\t| " + str(domain["count"]) \
+	print str(i) + ". " + domain["domain"] + "\t| " + str(domain["count"]) \
 		+ "\t| " + str(domain["percent_increase"]) + "%"
 
