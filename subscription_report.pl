@@ -14,20 +14,20 @@ my $day = floor(time() / 60 / 60 / 24);
 #	if (opt in ['-d', '--day']):
 #		day = int(arg)
 
-my $connection = DBI->connect('dbi:SQLite:subscriptions.db');
+my $dbh = DBI->connect('dbi:SQLite:subscriptions.db');
 
 my @sorted_top_fifty;
+my %domain_counts;
 
-$connection->disconnect();
+print("Getting subscriptions...")
+print("done!\n");
+
+$dbh->disconnect();
 
 print("Done!\n");
 
 =begin
-cursor = connection.cursor()
 
-domain_counts = dict()
-
-print("Getting subscriptions...")
 
 for address in cursor.execute('SELECT addr FROM mailing'):
 
@@ -53,7 +53,7 @@ for domain, count in domain_counts.items():
 			:domain, :day, :count
 		)''', {"domain" : domain, "day" : day, "count" : count})
 
-connection.commit()
+dbh.commit()
 
 print("done!")
 
