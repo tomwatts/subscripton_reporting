@@ -30,20 +30,30 @@ sub populate_db {
 
 	foreach (0..100000) {
 		# Generate a domain and add it to the list of domains
-#		$domains.append(str(x) + ".com")
+		push(@domains, $_ . '.com');
 	}
+
+	#print @domains;
+
+	my $insert_query = 'INSERT INTO mailing (addr) VALUES ';
 
 	foreach (0..10000000) {
 		# Choose a random domain and for email address
-#		address = str(x) + '@' + random.choice(domains)
-		#if (x % 1000000 == 0):
-			#print address
+		my $address = $_ . '@' . $domains[rand($#domains)];
+		#if ($_ % 1000000 == 0) {
+			#print "$address\n";
+		#}
 		
-		# Insert into DB
-#		my $statement = $connection->prepare(
-#			'INSERT INTO mailing (addr) VALUES (?)', (address,));
+		$insert_query .= "(?), ";
 	}
 	
+	print $insert_query;
+	# Insert into DB
+	#my $statement = $connection->prepare($insert_query);
+	#$statement->bind_param(1, $address);
+	#$statement->execute();
+	#$statement->finish();
+
 #	connection.commit()
 	print ("done!\n");
 }
