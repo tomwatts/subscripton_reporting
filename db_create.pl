@@ -24,19 +24,22 @@ sub create_db {
 }
 	
 sub populate_db {
-	print('Populating database..');
+	print("Populating database..");
 	my $dbh = shift;
-	my @domains = ();
+	my @domains;
 
-	foreach (0..100000) {
+	#foreach (0..100000) {
+	foreach (0..10) {
 		# Generate a domain and add it to the list of domains
 		push(@domains, $_ . '.com');
 	}
 
 	#print @domains;
 
+	my $sth = $dbh->prepare("INSERT INTO mailing (addr) VALUES (?)");
 
-	foreach (0..10000000) {
+	#foreach (0..10000000) {
+	foreach (0..1000) {
 		# Choose a random domain and for email address
 		my $address = $_ . '@' . $domains[rand($#domains)];
 		if ($_ % 1000000 == 0) {
@@ -44,11 +47,7 @@ sub populate_db {
 		}
 		
 		# Insert into DB
-		# TODO: revisit to determine if one large query is possible
-		my $sth = $dbh->prepare("INSERT INTO mailing (addr) VALUES (?)");
-		$sth->bind_param(1, $address);
-
-		$sth->execute();
+		$sth->execute($address);
 		$sth->finish();
 	}
 	
