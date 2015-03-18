@@ -24,12 +24,13 @@ print("Getting subscriptions...");
 my $sth = $dbh->prepare('SELECT addr FROM mailing');
 $sth->execute();
 my $rows = $sth->fetchall_arrayref();
+$sth->finish();
+# TODO: this loop could be more compact
 foreach (@$rows)
 {
-	#print("@$_\n");
 	# Chop off username and '@' leaving domain only
-	my $domain = split(/@/, @$_);
-	#print("$domain\n");
+	my ($user, $domain) = split(/@/, @$_[0]);
+	#print("domain=$domain\n");
 
 	# Count occurences of each domain
 	if (exists($domain_counts{$domain}))
@@ -46,15 +47,20 @@ print("done!\n");
 
 print("Updating the daily domain counts...");
 
+# TODO: revisit to attemp to use execute_array instead of looping
+# Insert today's count for each domain into daily_domain_counts and overwrite if
+# the count is already there for today's run
 $sth = $dbh->prepare("INSERT OR REPLACE INTO daily_domain_counts (domain, day, count)
 	VALUES (?, ?, ?)");
-# Insert today's count for each domain into daily_domain_counts
-#foreach domain, count in %domain_counts
-#{
-	# Overwrite if the count is already there for today's run
-#	$sth->execute($domain, $day, $count);
-	$sth->finish();
-#}
+
+while (my ($domain, $count) = each %domain_counts)
+{
+	#print("domain=$domain, count=$count\n");
+
+	$sth->execute($domain, $day, $count);
+}
+
+$sth->finish();
 
 print("done!\n");
 
@@ -62,39 +68,35 @@ print("done!\n");
 $sth = $dbh->prepare("SELECT domain, count FROM daily_domain_counts WHERE day = ?
 	ORDER BY count DESC LIMIT 50");
 $sth->execute($day);
+$rows = $sth->fetchall_hashref('domain');
 $sth->finish();
-#top_fifty_domains = cursor.fetchall()
 
-#for domain_count in top_fifty_domains:
-#	domain = domain_count[0]
-#	count = domain_count[1]
-#	thirty_days_ago = day - 30
+while (my ($domain, $count) = each %domain_counts)
+{
+	#print("domain=$domain, count=$count\n");
+	my $thirty_days_ago = $day - 30;
 
 	# Get the count from 30 days ago
-#	cursor.execute('''
-#		SELECT count FROM daily_domain_counts
-#		WHERE day=:thirty_days_ago AND domain = :domain LIMIT 1''', \
-#		{"thirty_days_ago" : thirty_days_ago, "domain" : domain})
-#	count_thirty_days_ago = cursor.fetchone()
+	$sth = $dbh->prepare("SELECT count FROM daily_domain_counts
+		WHERE day=? AND domain = ? LIMIT 1");
+	$sth->execute($day, $domain);	# TODO: PUT thirty_days_ago BACK!
+	my @count_thirty_days_ago = $sth->fetchrow_array();
+	#print("count_thirty_days_ago[0]=$count_thirty_days_ago[0]n");
+	$sth->finish();
 
-#	sorted_top_fifty_len = len(sorted_top_fifty)
-
-#	if (count_thirty_days_ago is None):
-#		percent_increase = float("inf")
-#	else:
-#		count_thirty_days_ago = count_thirty_days_ago[0]
-#		percent_increase = 100 * \
-#			(count - count_thirty_days_ago) / count_thirty_days_ago
+	my $percent_increase = "Infinite";
+	if (@count_thirty_days_ago)
+	{
+		my $count_thirty_days_ago = $count_thirty_days_ago[0];
+		$percent_increase = 100 * ($count - $count_thirty_days_ago)
+			/ $count_thirty_days_ago;
+	}
 	
-#	domain_dict = dict(domain=domain, count=count,\
-#		percent_increase=percent_increase)
+	my %domain_dict = (domain => $domain, count => $count,
+		percent_increase => $percent_increase,);
 
 	# Put this domain before the first count smaller than the current
-	if ($#sorted_top_fifty <= 0)
-	{
-#		sorted_top_fifty.append(domain_dict)
-	}
-	else
+	if (@sorted_top_fifty)
 	{
 		my $i = 0;
 #		while (i < $#sorted_top_fifty and \
@@ -102,17 +104,15 @@ $sth->finish();
 #			i += 1
 #		sorted_top_fifty.insert(i, domain_dict)
 	}
+	else
+	{
+		push(@sorted_top_fifty, %domain_dict);
+	}
+}
 
 print("Domain\t\t| Count\t| % Increase\n");
 
 my $i = 0;
-my @sorted_top_fifty;
-my %domain_count;
-$domain_count{'domain'} = "TestDomain.com";
-$domain_count{'count'} = 15;
-$domain_count{'percent_increase'} = 115;
-push(@sorted_top_fifty, %domain_count);
-
 foreach (@sorted_top_fifty)
 {
 	$i += 1;
