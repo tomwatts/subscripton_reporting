@@ -30,8 +30,7 @@ sub populate_db
 	my $dbh = shift;
 	my @domains;
 
-	#foreach(0..99999)
-	foreach(0..99)
+	foreach(0..99999)
 	{
 		# Generate a domain and add it to the list of domains
 		push(@domains, $_ . '.com');
@@ -45,8 +44,7 @@ sub populate_db
 
 	#print("Generating addresses.\n");
 
-	#foreach(0..9999999)
-	foreach(0..9999)
+	foreach(0..9999999)
 	{
 		# Choose a random domain and for email address
 		push(@$addresses, $_ . '@' . $domains[rand(@domains)]);
@@ -61,8 +59,10 @@ sub populate_db
 	$sth->execute_array({});	# Ignore status
 	$sth->finish();
 
-	print ("done!\n");
+	print("done!\n");
 }
+
+my $start_time = time();
 
 my $dbh = DBI->connect('dbi:SQLite:subscriptions.db');
 
@@ -70,4 +70,7 @@ create_db($dbh);
 populate_db($dbh);
 
 $dbh->disconnect();
+
+my $run_time = time() - $start_time;
+print("Elapsed time: $run_time s\n");
 

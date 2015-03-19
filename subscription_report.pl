@@ -5,6 +5,8 @@ use DBI;
 use Getopt::Long;
 use POSIX;
 
+my $start_time = time();
+
 # Day of run + domain makes a unique entry
 my $day = floor(time() / 60 / 60 / 24);
 
@@ -93,7 +95,7 @@ while(my @row = $sth->fetchrow_array())
 
 $sth->finish();
 
-@top_fifty = sort { $b->{'percent_increase'} <=> $a->{'percent_increase'} } @top_fifty;
+@top_fifty = sort({ $b->{'percent_increase'} <=> $a->{'percent_increase'} } @top_fifty);
 
 print("Domain\t\t| Count\t| % Increase\n");
 
@@ -108,4 +110,7 @@ foreach(@top_fifty)
 $dbh->disconnect();
 
 print("Done!\n");
+
+my $run_time = time() - $start_time;
+print("Elapsed time: $run_time s\n");
 
