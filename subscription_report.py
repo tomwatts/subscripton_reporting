@@ -82,8 +82,8 @@ with connection:
 			percent_increase = float("inf")
 		else:
 			count_thirty_days_ago = count_thirty_days_ago[0]
-			percent_increase = 100 * \
-				(count - count_thirty_days_ago) / count_thirty_days_ago
+			percent_increase = int(round(100 * float(count - count_thirty_days_ago)
+				/ count_thirty_days_ago))
 		
 		domain_dict = dict(domain=domain, count=count,\
 			percent_increase=percent_increase)

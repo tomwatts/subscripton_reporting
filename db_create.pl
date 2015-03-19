@@ -3,7 +3,8 @@
 use strict;
 use DBI;
 
-sub create_db {
+sub create_db
+{
 	print('Creating database...');
 	my $dbh = shift;
 	my $sth = $dbh->prepare('CREATE TABLE IF NOT EXISTS mailing (
@@ -20,37 +21,46 @@ sub create_db {
 	$sth->execute();
 	$sth->finish();
 
-	print ("done!\n");
+	print("done!\n");
 }
 	
-sub populate_db {
-	print("Populating database..");
+sub populate_db
+{
+	print("Populating database...");
 	my $dbh = shift;
 	my @domains;
 
-	#foreach (0..100000) {
-	foreach (0..10) {
+	#foreach(0..99999)
+	foreach(0..99)
+	{
 		# Generate a domain and add it to the list of domains
 		push(@domains, $_ . '.com');
 	}
 
-	#print @domains;
+	#print("\nFinished generating domains.\n");
+	#print("\@domains=@domains\n");
 
+	my $addresses = [];
 	my $sth = $dbh->prepare("INSERT INTO mailing (addr) VALUES (?)");
 
-	#foreach (0..10000000) {
-	foreach (0..1000) {
+	#print("Generating addresses.\n");
+
+	#foreach(0..9999999)
+	foreach(0..9999)
+	{
 		# Choose a random domain and for email address
-		my $address = $_ . '@' . $domains[rand($#domains)];
-		if ($_ % 1000000 == 0) {
-			print '.';
-		}
-		
-		# Insert into DB
-		$sth->execute($address);
-		$sth->finish();
+		push(@$addresses, $_ . '@' . $domains[rand(@domains)]);
 	}
+
+	#print("Done generating addresses.\n");
+	#foreach(@$addresses) { print };
+	#print("Inserting addresses.\n");
 	
+	# Insert into DB
+	$sth->bind_param_array(1, $addresses);
+	$sth->execute_array({});	# Ignore status
+	$sth->finish();
+
 	print ("done!\n");
 }
 
