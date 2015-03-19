@@ -99,14 +99,16 @@ while (my ($domain, $count) = each %domain_counts)
 	if (@sorted_top_fifty)
 	{
 		my $i = 0;
-#		while (i < $#sorted_top_fifty and \
-#			sorted_top_fifty[i]["percent_increase"] > percent_increase):
-#			i += 1
-#		sorted_top_fifty.insert(i, domain_dict)
+#		while ($i < @sorted_top_fifty &&
+#			$sorted_top_fifty[$i]{'percent_increase'} > $percent_increase)
+#		{
+#			$i += 1
+#		}
+		#sorted_top_fifty.insert(i, domain_dict)
 	}
 	else
 	{
-		push(@sorted_top_fifty, %domain_dict);
+		@sorted_top_fifty = (%domain_dict);
 	}
 }
 
