@@ -16,9 +16,6 @@ or die("Error occured while getting command line arguments\n");
 
 my $thirty_days_ago = $day - 30;
 
-#print("\$day=$day\n");
-#print("\$thirty_days_ago=$thirty_days_ago\n");
-
 my $dbh = DBI->connect('dbi:SQLite:subscriptions.db');
 
 my @top_fifty;
@@ -28,22 +25,20 @@ print("Getting subscriptions...");
 
 my $sth = $dbh->prepare('SELECT addr FROM mailing');
 $sth->execute();
-my $rows = $sth->fetchall_arrayref();
-$sth->finish();
 
-foreach(@$rows)
+while(my @row = $sth->fetchrow_array())
 {
 	# Chop off username and '@' leaving domain only
-	my $domain = (split(/@/, @$_[0]))[-1];
-	#print("domain=$domain\n");
+	my $domain = (split(/@/, $row[0]))[-1];
 
 	# Count occurences of each domain
 	$domain_counts{$domain} += 1;
 }
 
+$sth->finish();
+
 print("done!\nUpdating the daily domain counts...");
 
-# TODO: revisit to attemp to use execute_array instead of looping
 # Insert today's count for each domain into daily_domain_counts and overwrite if
 # the count is already there for today's run
 $sth = $dbh->prepare("INSERT OR REPLACE INTO daily_domain_counts (domain, day, count)
@@ -51,7 +46,6 @@ $sth = $dbh->prepare("INSERT OR REPLACE INTO daily_domain_counts (domain, day, c
 
 while(my ($domain, $count) = each %domain_counts)
 {
-	#print("domain=$domain, count=$count\n");
 	$sth->execute($domain, $day, $count);
 }
 
@@ -69,7 +63,6 @@ while(my @row = $sth->fetchrow_array())
 {
 	my $domain = $row[0];
 	my $count = $row[1];
-	#print("domain=$domain, count=$count\n");
 
 	# Get the count from 30 days ago
 	my $previous_count_sth = $dbh->prepare(
@@ -77,16 +70,13 @@ while(my @row = $sth->fetchrow_array())
 		WHERE day=? AND domain = ? LIMIT 1");
 	$previous_count_sth->execute($thirty_days_ago, $domain);
 	my @count_thirty_days_ago = $previous_count_sth->fetchrow_array();
-	#print("count_thirty_days_ago[0]=$count_thirty_days_ago[0]\n");
 	$previous_count_sth->finish();
 
-	my $percent_increase = "Infinite";
+	my $percent_increase = "inf";
 	if(@count_thirty_days_ago)
 	{
-		#print("100 * ($count - $count_thirty_days_ago[0]) / $count_thirty_days_ago[0] = ");
 		$percent_increase = 100 * ($count - $count_thirty_days_ago[0])
 			/ $count_thirty_days_ago[0];
-		#print("$percent_increase\n");
 	}
 	
 	push(@top_fifty, {domain => $domain, count => $count,
@@ -95,7 +85,8 @@ while(my @row = $sth->fetchrow_array())
 
 $sth->finish();
 
-@top_fifty = sort({ $b->{'percent_increase'} <=> $a->{'percent_increase'} } @top_fifty);
+@top_fifty =
+	sort({ $b->{'percent_increase'} <=> $a->{'percent_increase'} } @top_fifty);
 
 print("Domain\t\t| Count\t| % Increase\n");
 

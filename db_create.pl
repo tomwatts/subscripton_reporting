@@ -30,30 +30,21 @@ sub populate_db
 	my $dbh = shift;
 	my @domains;
 
-	foreach(0..99999)
+	foreach(0..99)
 	{
 		# Generate a domain and add it to the list of domains
 		push(@domains, $_ . '.com');
 	}
 
-	#print("\nFinished generating domains.\n");
-	#print("\@domains=@domains\n");
-
 	my $addresses = [];
 	my $sth = $dbh->prepare("INSERT INTO mailing (addr) VALUES (?)");
 
-	#print("Generating addresses.\n");
-
-	foreach(0..9999999)
+	foreach(0..9999)
 	{
 		# Choose a random domain and for email address
 		push(@$addresses, $_ . '@' . $domains[rand(@domains)]);
 	}
 
-	#print("Done generating addresses.\n");
-	#foreach(@$addresses) { print };
-	#print("Inserting addresses.\n");
-	
 	# Insert into DB
 	$sth->bind_param_array(1, $addresses);
 	$sth->execute_array({});	# Ignore status
